@@ -19,3 +19,4 @@
 ### Prob 
 
 - On vm i didnt have kvm activated 
+- Install_tools.sh not done
