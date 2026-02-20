@@ -1,0 +1,66 @@
+#-*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/bookworm64"
+
+  config.vm.define "kdurouxS" do |s|
+    s.vm.hostname = "kdurouxS"
+    s.vm.network "private_network", ip: "192.168.56.110"
+
+    s.vm.provider :libvirt do |v|
+      v.driver = "qemu"
+      v.cpu_mode = "host-model"
+      v.cpus = 1
+      v.memory = 1024
+      v.machine_type = "q35"
+    end
+
+    s.vm.provision "shell", inline: <<-SHELL
+      apt-get update && apt-get install -y curl
+      systemctl stop ufw || true
+      
+      IFACE=$(ip -4 ad | grep "192.168.56." | awk '{print $NF}')
+      
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
+        --node-ip=192.168.56.110 \
+        --advertise-address=192.168.56.110 \
+        --bind-address=192.168.56.110 \
+        --flannel-iface=$IFACE \
+        --write-kubeconfig-mode 644" sh -
+
+               # curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip=192.168.56.110 --flannel-iface=$IFACE" sh -
+
+
+
+      while [ ! -f /var/lib/rancher/k3s/server/node-token ]; do sleep 2; done
+      cp /var/lib/rancher/k3s/server/node-token /vagrant/k3s-token
+    SHELL
+  end
+
+  config.vm.define "kdurouxSW" do |sw|
+    sw.vm.hostname = "kdurouxSW"
+    sw.vm.network "private_network", ip: "192.168.56.111"
+
+    sw.vm.provider :libvirt do |v|
+      v.driver = "qemu"
+      v.cpu_mode = "host-model"
+      v.cpus = 1
+      v.memory = 1024
+    end
+
+    sw.vm.provision "shell", inline: <<-SHELL
+      apt-get update && apt-get install -y curl
+      
+      IFACE=$(ip -4 ad | grep "192.168.56." | awk '{print $NF}')
+
+      while [ ! -f /vagrant/k3s-token ]; do sleep 5; done
+      
+      TOKEN=$(cat /vagrant/k3s-token)
+      
+      curl -sfL https://get.k3s.io | K3S_URL=https://192.168.56.110:6443 \
+        K3S_TOKEN=$TOKEN \
+        INSTALL_K3S_EXEC="agent --node-ip=192.168.56.111 --flannel-iface=$IFACE" sh -
+    SHELL
+  end
+end

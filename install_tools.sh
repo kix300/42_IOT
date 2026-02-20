@@ -31,6 +31,15 @@ apt update
 
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+sudo apt install -y qemu-system nfs-kernel-server qemu-utils libvirt-daemon-system libvirt-clients virt-manager \ libvirt-dev ruby-dev build-essential
+
+vagrant plugin install vagrant-libvirt
+
+sudo usermod -aG libvirt $USER 
+sudo usermod -aG kvm $USER
+newgrp libvirt
+
+
 echo -e "\n${GREEN}[4/4] Installation de K3d...${NC}"
 wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
 
