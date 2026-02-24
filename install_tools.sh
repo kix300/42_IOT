@@ -36,7 +36,7 @@ sudo apt update
 
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-sudo apt install -y qemu-system nfs-kernel-server qemu-utils libvirt-daemon-system libvirt-clients virt-manager \ libvirt-dev ruby-dev build-essential
+sudo apt install -y qemu-system nfs-kernel-server qemu-utils libvirt-daemon-system libvirt-clients virt-manager libvirt-dev ruby-dev build-essential
 
 
 sudo usermod -aG libvirt $USER 
