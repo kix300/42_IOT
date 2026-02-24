@@ -18,27 +18,32 @@ curl -sfL https://get.k3s.io | sh -
 sudo chmod 644 /etc/rancher/k3s/k3s.yaml
 
 echo -e "\n${GREEN}[3/4] Installation de Docker...${NC}"
-apt install ca-certificates curl
-install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-chmod a+r /etc/apt/keyrings/docker.asc
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-echo \
-	"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-	$(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-	tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt update
+sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt update
 
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-sudo apt install -y qemu-system nfs-kernel-server qemu-utils libvirt-daemon-system libvirt-clients virt-manager \ libvirt-dev ruby-dev build-essential
+sudo apt install -y libvirt qemu-system nfs-kernel-server qemu-utils libvirt-daemon-system libvirt-clients virt-manager \ libvirt-dev ruby-dev build-essential
 
-vagrant plugin install vagrant-libvirt
 
 sudo usermod -aG libvirt $USER 
 sudo usermod -aG kvm $USER
 newgrp libvirt
 
+vagrant plugin install vagrant-libvirt
 
 echo -e "\n${GREEN}[4/4] Installation de K3d...${NC}"
 wget -q -O - https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
