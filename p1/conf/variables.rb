@@ -1,0 +1,5 @@
+OS = "debian/bookworm64"
+SERVER_NAME = "kdurouxS"
+SERVER_IP   = "192.168.56.110"
+WORKER_NAME = "kdurouxSW"
+WORKER_IP   = "192.168.56.111"
