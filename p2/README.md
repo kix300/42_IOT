@@ -20,3 +20,7 @@ config of 3 app on k3s using nixos
 - https://github.com/nix-community/vagrant-nixos-plugin
 - https://lunar.computer/vagrant-nixos
 - https://github.com/traefik/whoami
+
+#### UTILS
+- sudo kubectl get pods 
+- sudo kubectl get ingress

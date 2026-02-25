@@ -91,10 +91,8 @@ kind: Ingress
 metadata:
   name: main-ingress
   annotations:
-    # On utilise Traefik (par défaut dans k3s)
     kubernetes.io/ingress.class: traefik
 spec:
-  # L'app par défaut si aucun host ne match
   defaultBackend:
     service:
       name: svc-app3
