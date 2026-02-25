@@ -13,6 +13,11 @@ Projet d'infrastructure as code combinant Vagrant, K3S, K3D, Docker et Kubernete
 - **Docker** — conteneurisation
 - **K8S** — orchestration de conteneurs
 
+
+## Plugin
+
+- vagrant plugin install vagrant-libvirt
+- vagrant plugin install vagrant-nixos-plugin
 ## Structure du projet
 
 ```
