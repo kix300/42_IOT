@@ -1,0 +1,53 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+# Faut faire une machine msimaoS 
+# Avec 3 app quon peux acceder avec ip + host 
+# exmple : 192.168.56.110 in their web browser with the HOST app1.com,
+# app1 none
+# app2 3 replica
+# app3 by default
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/bookworm64"
+
+  config.vm.define "kdurouxS" do |s|
+    s.vm.hostname = "kdurouxS"
+    s.vm.network "private_network", ip: "192.168.56.110"
+
+    # s.vm.synced_folder ".", "/vagrant", type: "9p", disabled: false, accessmode: "mapped"
+
+    s.vm.provider :libvirt do |v|
+      v.driver = "qemu"
+      v.cpu_mode = "host-model"
+      v.cpus = 4
+      v.memory = 4048
+      v.machine_type = "q35"
+    end
+    # Provisioning des Apps Kubernetes
+    s.vm.provision "shell", inline: <<-SHELL
+
+      apt-get update && apt-get install -y curl
+      systemctl stop ufw || true
+
+      IFACE=$(ip -4 ad | grep "192.168.56." | awk '{print $NF}')
+
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
+        --node-ip=192.168.56.110 \
+        --advertise-address=192.168.56.110 \
+        --bind-address=192.168.56.110 \
+        --flannel-iface=$IFACE \
+        --write-kubeconfig-mode 644" sh -
+      until [ -f /etc/rancher/k3s/k3s.yaml ]; do sleep 2; done
+      export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+      until kubectl get node | grep -q "Ready"; do sleep 2; done
+
+      if [ -f /vagrant/k3s_config.yaml ]; then
+        kubectl apply -f /vagrant/k3s_config.yaml
+      else
+        echo "ERREUR : k3s_config.yaml non trouvé dans /vagrant"
+      fi
+    SHELL
+  end
+end

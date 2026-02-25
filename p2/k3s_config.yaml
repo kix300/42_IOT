@@ -1,0 +1,123 @@
+# --- APP 1 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app1
+  template:
+    metadata:
+      labels:
+        app: app1
+    spec:
+      containers:
+      - name: whoami
+        image: traefik/whoami
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-app1
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: app1
+---
+# --- APP 2 (3 REPLICAS) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app2
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app2
+  template:
+    metadata:
+      labels:
+        app: app2
+    spec:
+      containers:
+      - name: whoami
+        image: traefik/whoami
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-app2
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: app2
+---
+# --- APP 3 (DEFAULT) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app3
+  template:
+    metadata:
+      labels:
+        app: app3
+    spec:
+      containers:
+      - name: whoami
+        image: traefik/whoami
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-app3
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: app3
+---
+# --- INGRESS (LE ROUTAGE) ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-ingress
+  annotations:
+    # On utilise Traefik (par défaut dans k3s)
+    kubernetes.io/ingress.class: traefik
+spec:
+  # L'app par défaut si aucun host ne match
+  defaultBackend:
+    service:
+      name: svc-app3
+      port:
+        number: 80
+  rules:
+  - host: app1.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: svc-app1
+            port:
+              number: 80
+  - host: app2.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: svc-app2
+            port:
+              number: 80
