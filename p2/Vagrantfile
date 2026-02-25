@@ -44,7 +44,7 @@ Vagrant.configure("2") do |config|
       until kubectl get node | grep -q "Ready"; do sleep 2; done
 
       if [ -f /vagrant/k3s_config.yaml ]; then
-        kubectl apply -f /vagrant/k3s_config.yaml
+        kubectl apply -f /vagrant/conf/k3s_config.yaml
       else
         echo "ERREUR : k3s_config.yaml non trouvé dans /vagrant"
       fi
