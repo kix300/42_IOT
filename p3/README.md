@@ -1,9 +1,15 @@
-# p3: k3d and argocd
+# Part 3: K3d and Argo CD (GitOps)
 
-#### UTILS
-- k3d cluster create mycluster -p "8888:30080@agent:0" --agents 1
+Ce projet met en place une infrastructure **GitOps** utilisant **K3d** (K3s dans Docker) et **Argo CD** pour déployer automatiquement une application depuis un dépôt GitHub.
 
-- kubectl create namespace argocd
-- kubectl create namespace dev
-- kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml --server-side
-- kubectl apply -f p3/application.yaml -n argocd
+## Prérequis
+- Docker installé
+- K3d installé
+- Kubectl installé
+
+## Installation Rapide
+
+1. Clonez le dépôt sur votre VM.
+2. À la racine du dossier `p3`, lancez :
+   ```bash
+   make
