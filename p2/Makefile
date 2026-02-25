@@ -11,7 +11,6 @@ up:
 clean:
 	@echo "$(YELLOW)Destruction du cluster et nettoyage...$(NC)"
 	vagrant destroy -f
-	rm -f k3s-token
 	# sudo virsh undefine p1_kdurouxS --remove-all-storage || true
 	# sudo virsh undefine p1_kdurouxSW --remove-all-storage || true
 
@@ -21,9 +20,10 @@ status:
 	@echo "$(GREEN)État des nœuds sur kdurouxS :$(NC)"
 	vagrant ssh kdurouxS -c "sudo kubectl get nodes"
 
-logs:
-	@echo "$(YELLOW)Logs de l'agent k3s sur kdurouxSW (Ctrl+C pour quitter) :$(NC)"
-	vagrant ssh kdurouxSW -c "sudo journalctl -u k3s-agent -f"
+status-all:
+	@echo "$(GREEN)État de tous sur kdurouxS :$(NC)"
+	vagrant ssh kdurouxS -c "sudo kubectl get all"
+	vagrant ssh kdurouxS -c "sudo kubectl get ingress"
 
 help:
 	@echo "Commandes disponibles :"
@@ -31,4 +31,4 @@ help:
 	@echo "  make clean   - vagrant destroy + rm token"
 	@echo "  make re      - Tout détruire et tout relancer"
 	@echo "  make status  - Voir les nodes (kubectl get nodes)"
-	@echo "  make logs    - Voir les logs de l'agent sur le worker"
+	@echo "  make status-all  - Voir tous"

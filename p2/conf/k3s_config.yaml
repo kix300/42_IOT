@@ -93,11 +93,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: traefik
 spec:
-  defaultBackend:
-    service:
-      name: svc-app3
-      port:
-        number: 80
+  ingressClassName: traefik
   rules:
   - host: app1.com
     http:
@@ -117,5 +113,15 @@ spec:
         backend:
           service:
             name: svc-app2
+            port:
+              number: 80
+  # --- C'est ici que la magie opère pour l'App 3 ---
+  - http: # Pas de "host" défini ici = catch-all
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: svc-app3
             port:
               number: 80
