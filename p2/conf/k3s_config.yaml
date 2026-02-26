@@ -15,7 +15,15 @@ spec:
     spec:
       containers:
       - name: whoami
-        image: traefik/whoami
+        image: php:8.2-apache
+        volumeMounts:
+        - name: web-app1
+          mountPath: /var/www/html
+      volumes:
+      - name: web-app1
+        hostPath:
+          path: /vagrant/web-app/
+          type: Directory
 ---
 apiVersion: v1
 kind: Service
@@ -44,7 +52,15 @@ spec:
     spec:
       containers:
       - name: whoami
-        image: traefik/whoami
+        image: php:8.2-apache
+        volumeMounts:
+        - name: web-app2
+          mountPath: /var/www/html
+      volumes:
+      - name: web-app2
+        hostPath:
+          path: /vagrant/web-app/
+          type: Directory
 ---
 apiVersion: v1
 kind: Service
@@ -73,7 +89,15 @@ spec:
     spec:
       containers:
       - name: whoami
-        image: traefik/whoami
+        image: php:8.2-apache
+        volumeMounts:
+        - name: web-app3
+          mountPath: /var/www/html
+      volumes:
+      - name: web-app3
+        hostPath:
+          path: /vagrant/web-app/
+          type: Directory
 ---
 apiVersion: v1
 kind: Service
