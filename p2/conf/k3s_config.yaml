@@ -139,8 +139,7 @@ spec:
             name: svc-app2
             port:
               number: 80
-  # --- C'est ici que la magie opère pour l'App 3 ---
-  - http: # Pas de "host" défini ici = catch-all
+  - http:
       paths:
       - path: /
         pathType: Prefix
