@@ -1,5 +1,9 @@
 <?php
 $domain = $_SERVER['SERVER_NAME'];
+
+if (filter_var($domain, FILTER_VALIDATE_IP)) {
+    $domain = 'app3.com';
+}
 ?>
 
 <!DOCTYPE html>
