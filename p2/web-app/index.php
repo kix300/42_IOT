@@ -9,7 +9,7 @@ if (filter_var($domain, FILTER_VALIDATE_IP)) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Nom du domaine</title>
+    <title><?php echo ($domain); ?></title>
 </head>
 <body>
     <h1><?php echo htmlspecialchars($domain); ?></h1>
