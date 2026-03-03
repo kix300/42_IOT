@@ -13,3 +13,10 @@ Ce projet met en place une infrastructure **GitOps** utilisant **K3d** (K3s dans
 2. À la racine du dossier `p3`, lancez :
    ```bash
    make
+
+## Accès
+
+- **Argo CD UI** : https://<IP_VM>:8443 (utilisez `make password` pour le mot de passe admin)
+- **Application** : http://<IP_VM>:8888
+
+Remplacez `<IP_VM>` par l'adresse IP de votre VM. Vos amis sur le même réseau peuvent y accéder directement.

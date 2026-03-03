@@ -10,7 +10,7 @@ all: cluster namespaces argocd deploy password status
 
 cluster:
 	@echo "Creating k3d cluster..."
-	@k3d cluster create $(CLUSTER_NAME) -p "8888:30080@loadbalancer" --agents 1
+	@k3d cluster create $(CLUSTER_NAME) -p "8888:30080@loadbalancer" -p "8443:30081@loadbalancer" --agents 1
 	@echo "Waiting for nodes to be ready..."
 	@kubectl wait --for=condition=ready node --all --timeout=60s
 
@@ -24,6 +24,8 @@ argocd:
 	@kubectl apply -n $(ARGOCD_NS) -f $(ARGOCD_MANIFEST) --server-side
 	@echo "Waiting for Argo CD server..."
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n $(ARGOCD_NS) --timeout=300s
+	@echo "Patching Argo CD server service to NodePort..."
+	@kubectl patch svc argocd-server -n $(ARGOCD_NS) --type='json' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}, {"op": "replace", "path": "/spec/ports/0/nodePort", "value": 30081}]'
 
 deploy:
 	@echo "Applying Argo CD Application..."
@@ -67,6 +69,10 @@ access-guide:
 	@echo "   $$ make server     # Start port-forward"
 	@echo "   $$ make password   # Get password (in another terminal)"
 	@echo "   Then visit: https://localhost:8080\n"
+	@echo "External access (from same network):"
+	@echo "   ArgoCD UI: https://<VM_IP>:8443"
+	@echo "   App: http://<VM_IP>:8888"
+	@echo "   Use 'make password' to get the admin password\n"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
 
 re: clean all
