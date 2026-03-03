@@ -22,8 +22,7 @@ deploy-gitlab:
 	@echo "Installing GitLab via Helm (following https://faun.pub/deploy-gitlab-in-on-premises-kubernetes-1833ef599f80)..."
 	@helm repo add gitlab https://charts.gitlab.io/ || true
 	@helm repo update
-	@helm upgrade --install gitlab gitlab/gitlab --namespace $(GITLAB_NS) --timeout 600s --set global.hosts.domain=example.com --set global.hosts.https=false --set global.ingress.configureCertmanager=false -f value.yaml
-
+	@helm upgrade --install gitlab gitlab/gitlab --namespace $(GITLAB_NS) --timeout 600s --set global.hosts.domain=kixlab.com --set global.hosts.https=false --set global.ingress.configureCertmanager=false -f value.yaml
 	@echo "Patching GitLab nginx-ingress-controller to NodePort..."
 	@kubectl patch svc gitlab-nginx-ingress-controller -p '{"spec": {"type": "NodePort"}}' -n $(GITLAB_NS)
 	@kubectl patch svc gitlab-nginx-ingress-controller -p '{"spec": {"externalTrafficPolicy": "Cluster"}}' -n $(GITLAB_NS)
@@ -87,4 +86,4 @@ access-guide:
 
 re: clean all
 
-.PHONY: all cluster namespaces argocd deploy deploy-gitlab password clean re logs status server access-guide
+.PHONY: all cluster namespaces argocd deploy-gitlab password clean re logs status server access-guide

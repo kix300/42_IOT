@@ -1,6 +1,6 @@
 global:
   hosts:
-    domain: example.com # Replace with your VM IP or domain, e.g., 192.168.1.100
+    domain: kixlab.com # Replace with your VM IP or domain, e.g., 192.168.1.100
     https: false # Disable HTTPS for local
   ingress:
     configureCertmanager: false
