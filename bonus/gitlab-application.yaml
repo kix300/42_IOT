@@ -8,24 +8,24 @@
      source:
        chart: gitlab
        repoURL: https://charts.gitlab.io/
-       targetRevision: 7.6.0  # Version récente du chart ; vérifie https://charts.gitlab.io/ pour la dernière
+       targetRevision: 7.6.0
        helm:
          valuesObject:
            global:
              hosts:
-               domain: example.com  # Remplace par ton domaine ou IP (e.g., <IP_VM>)
-               hostSuffix: ""  # Pour éviter les sous-domaines si tu n'as pas de DNS
+               domain: kixlab.com
+               hostSuffix: "" 
              ingress:
-               configureCertmanager: false  # Désactive Cert-Manager pour simplifier
+               configureCertmanager: false
            certmanager:
              install: false
            nginx-ingress:
-             enabled: false  # On utilise NodePort pour l'accès
+             enabled: false
            gitlab:
              webservice:
                service:
                  type: NodePort
-                 nodePort: 30082  # Port externe pour GitLab (différent de Argo CD)
+                 nodePort: 30082
              gitaly:
                persistence:
                  enabled: true
@@ -39,12 +39,12 @@
                  enabled: true
                  size: 5Gi
            registry:
-             enabled: false  # Désactive le registry pour simplifier
+             enabled: false
            prometheus:
              install: false
      destination:
        server: 'https://kubernetes.default.svc'
-       namespace: gitlab  # Nouveau namespace pour GitLab
+       namespace: gitlab  
      syncPolicy:
        automated:
          selfHeal: true
