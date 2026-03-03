@@ -1,0 +1,39 @@
+global:
+  hosts:
+    domain: example.com # Replace with your VM IP or domain, e.g., 192.168.1.100
+    https: false # Disable HTTPS for local
+  ingress:
+    configureCertmanager: false
+    tls:
+      secretName: "" # No TLS secret for local
+
+nginx-ingress:
+  enabled: true
+  controller:
+    service:
+      type: NodePort # Patch to NodePort as per tutorial
+      externalTrafficPolicy: Cluster
+
+# Storage class for persistence (k3d default is local-path)
+postgresql:
+  persistence:
+    storageClass: local-path
+    size: 10Gi
+
+redis:
+  persistence:
+    storageClass: local-path
+    size: 5Gi
+
+gitlab:
+  gitaly:
+    persistence:
+      storageClass: local-path
+      size: 10Gi
+  webservice:
+    service:
+      type: NodePort
+  registry:
+    enabled: false # Disable registry for simplicity
+  prometheus:
+    install: false # Disable Prometheus for local

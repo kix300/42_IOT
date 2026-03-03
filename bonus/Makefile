@@ -1,7 +1,6 @@
 CLUSTER_NAME = kdurouxC
 GITLAB_NS = gitlab
 ARGOCD_NS = argocd
-DEV_NS = dev
 ARGOCD_MANIFEST = https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 LOCAL_PORT = 8080
 ARGOCD_SERVER = argocd-server
@@ -10,22 +9,30 @@ all: cluster namespaces argocd deploy deploy-gitlab password status
 
 cluster:
 	@echo "Creating k3d cluster..."
-	@k3d cluster create $(CLUSTER_NAME) -p "8888:30080@loadbalancer" -p "8443:30081@loadbalancer" --agents 1
+	@k3d cluster create $(CLUSTER_NAME) -p "8888:30080@loadbalancer" -p "8443:30081@loadbalancer" --agents 1 --servers-memory 6G --agents-memory 6G
 	@echo "Waiting for nodes to be ready..."
 	@kubectl wait --for=condition=ready node --all --timeout=60s
 
 namespaces:
 	@echo "Creating namespaces..."
 	@kubectl create namespace $(ARGOCD_NS) || true
-	@kubectl create namespace $(DEV_NS) || true
 	@kubectl create namespace $(GITLAB_NS) || true
 
 deploy-gitlab:
-	@echo "Applying GitLab Argo CD Application..."
-	@kubectl apply -f gitlab-application.yaml -n $(ARGOCD_NS)
-	@echo "Waiting for GitLab to sync..."
-	@sleep 30
-	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=webservice -n $(GITLAB_NS) --timeout=600s || echo "GitLab peut prendre du temps à démarrer ; vérifie avec 'kubectl get pods -n gitlab'"
+	@echo "Installing GitLab via Helm (following https://faun.pub/deploy-gitlab-in-on-premises-kubernetes-1833ef599f80)..."
+	@helm repo add gitlab https://charts.gitlab.io/ || true
+	@helm repo update
+	@helm upgrade --install gitlab gitlab/gitlab --namespace $(GITLAB_NS) --timeout 600s --set global.hosts.domain=example.com --set global.hosts.https=false --set global.ingress.configureCertmanager=false -f value.yaml
+
+	@echo "Patching GitLab nginx-ingress-controller to NodePort..."
+	@kubectl patch svc gitlab-nginx-ingress-controller -p '{"spec": {"type": "NodePort"}}' -n $(GITLAB_NS)
+	@kubectl patch svc gitlab-nginx-ingress-controller -p '{"spec": {"externalTrafficPolicy": "Cluster"}}' -n $(GITLAB_NS)
+	@echo "Waiting for GitLab pods to be ready..."
+	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=webservice -n $(GITLAB_NS) --timeout=600s || echo "GitLab peut prendre 10-15 min à démarrer ; vérifie avec 'kubectl get pods -n gitlab'"
+	@echo "\nGitLab Ports (check with 'kubectl describe svc gitlab-nginx-ingress-controller -n gitlab'):"
+	@kubectl describe svc gitlab-nginx-ingress-controller -n $(GITLAB_NS) | grep -E "Port:|NodePort:"
+	@echo "\nGitLab Root Password:"
+	@kubectl -n $(GITLAB_NS) get secret gitlab-gitlab-initial-root-password -o go-template='{{.data.password}}' | base64 -d && echo
 
 argocd:
 	@echo "Installing Argo CD..."
@@ -34,13 +41,6 @@ argocd:
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n $(ARGOCD_NS) --timeout=300s
 	@echo "Patching Argo CD server service to NodePort..."
 	@kubectl patch svc argocd-server -n $(ARGOCD_NS) --type='json' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}, {"op": "replace", "path": "/spec/ports/0/nodePort", "value": 30081}]'
-
-deploy:
-	@echo "Applying Argo CD Application..."
-	@kubectl apply -f application.yaml -n $(ARGOCD_NS)
-	@echo "Waiting for app to sync..."
-	@sleep 10
-	@kubectl wait --for=condition=ready pod -l app=playground -n $(DEV_NS) --timeout=300s
 
 password:
 	@echo "\nArgo CD Initial Admin Password:"
@@ -54,8 +54,9 @@ status:
 	@echo "\nCluster Status:"
 	@kubectl get pods -A
 	@echo "\nServices:"
-	@kubectl get svc -n $(DEV_NS)
 	@kubectl get svc -n $(GITLAB_NS)
+	@echo "\nGitLab Ingresses:"
+	@kubectl get ingress -n $(GITLAB_NS)
 	@echo "\nArgo CD Apps:"
 	@kubectl get applications -n $(ARGOCD_NS)
 
