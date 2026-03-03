@@ -3,6 +3,8 @@ CLUSTER_NAME = kdurouxC
 ARGOCD_NS = argocd
 DEV_NS = dev
 ARGOCD_MANIFEST = https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+LOCAL_PORT = 8080
+ARGOCD_SERVER = argocd-server
 
 all: cluster namespaces argocd deploy password status
 
@@ -50,6 +52,23 @@ clean:
 	@echo "Deleting cluster..."
 	@k3d cluster delete $(CLUSTER_NAME)
 
+
+server:
+	@echo "Setting up port-forward to ArgoCD server..."
+	@echo "Access ArgoCD UI at: https://localhost:$(LOCAL_PORT)"
+	@echo "Use 'make password' to get the admin password"
+	@echo "Keep this terminal open - Press Ctrl+C to stop\n"
+	@kubectl port-forward -n $(ARGOCD_NS) svc/$(ARGOCD_SERVER) $(LOCAL_PORT):443
+
+access-guide:
+	@echo "\nArgoCD Access Guide:"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "Quick access (port-forward):"
+	@echo "   $$ make server     # Start port-forward"
+	@echo "   $$ make password   # Get password (in another terminal)"
+	@echo "   Then visit: https://localhost:8080\n"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+
 re: clean all
 
-.PHONY: all cluster namespaces argocd deploy password clean re logs status
+.PHONY: all cluster namespaces argocd deploy password clean re logs status server access-guide
