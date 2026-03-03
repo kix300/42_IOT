@@ -1,12 +1,12 @@
-# Variables
 CLUSTER_NAME = kdurouxC
+GITLAB_NS = gitlab
 ARGOCD_NS = argocd
 DEV_NS = dev
 ARGOCD_MANIFEST = https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 LOCAL_PORT = 8080
 ARGOCD_SERVER = argocd-server
 
-all: cluster namespaces argocd deploy password status
+all: cluster namespaces argocd deploy deploy-gitlab password status
 
 cluster:
 	@echo "Creating k3d cluster..."
@@ -18,6 +18,14 @@ namespaces:
 	@echo "Creating namespaces..."
 	@kubectl create namespace $(ARGOCD_NS) || true
 	@kubectl create namespace $(DEV_NS) || true
+	@kubectl create namespace $(GITLAB_NS) || true
+
+deploy-gitlab:
+	@echo "Applying GitLab Argo CD Application..."
+	@kubectl apply -f gitlab-application.yaml -n $(ARGOCD_NS)
+	@echo "Waiting for GitLab to sync..."
+	@sleep 30
+	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=webservice -n $(GITLAB_NS) --timeout=600s || echo "GitLab peut prendre du temps à démarrer ; vérifie avec 'kubectl get pods -n gitlab'"
 
 argocd:
 	@echo "Installing Argo CD..."
@@ -47,6 +55,7 @@ status:
 	@kubectl get pods -A
 	@echo "\nServices:"
 	@kubectl get svc -n $(DEV_NS)
+	@kubectl get svc -n $(GITLAB_NS)
 	@echo "\nArgo CD Apps:"
 	@kubectl get applications -n $(ARGOCD_NS)
 
@@ -77,4 +86,4 @@ access-guide:
 
 re: clean all
 
-.PHONY: all cluster namespaces argocd deploy password clean re logs status server access-guide
+.PHONY: all cluster namespaces argocd deploy deploy-gitlab password clean re logs status server access-guide
