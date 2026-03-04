@@ -5,7 +5,7 @@ ARGOCD_MANIFEST = https://raw.githubusercontent.com/argoproj/argo-cd/stable/mani
 LOCAL_PORT = 8080
 ARGOCD_SERVER = argocd-server
 
-all: cluster namespaces argocd deploy deploy-gitlab password status
+all: cluster namespaces argocd deploy-gitlab password status
 
 cluster:
 	@echo "Creating k3d cluster..."
@@ -26,6 +26,8 @@ deploy-gitlab:
 	@echo "Patching GitLab nginx-ingress-controller to NodePort..."
 	@kubectl patch svc gitlab-nginx-ingress-controller -p '{"spec": {"type": "NodePort"}}' -n $(GITLAB_NS)
 	@kubectl patch svc gitlab-nginx-ingress-controller -p '{"spec": {"externalTrafficPolicy": "Cluster"}}' -n $(GITLAB_NS)
+	#utilise le port 30080
+	@kubectl patch svc gitlab-nginx-ingress-controller -n gitlab --type='json' -p='[{"op": "replace", "path": "/spec/ports/0/nodePort", "value": 30080}]'
 	@echo "Waiting for GitLab pods to be ready..."
 	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=webservice -n $(GITLAB_NS) --timeout=600s || echo "GitLab peut prendre 10-15 min à démarrer ; vérifie avec 'kubectl get pods -n gitlab'"
 	@echo "\nGitLab Ports (check with 'kubectl describe svc gitlab-nginx-ingress-controller -n gitlab'):"
@@ -37,13 +39,14 @@ argocd:
 	@echo "Installing Argo CD..."
 	@kubectl apply -n $(ARGOCD_NS) -f $(ARGOCD_MANIFEST) --server-side
 	@echo "Waiting for Argo CD server..."
-	@kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n $(ARGOCD_NS) --timeout=300s
+	@kubectl wait --for=condition=available deployment/argocd-server -n $(ARGOCD_NS) --timeout=300s
 	@echo "Patching Argo CD server service to NodePort..."
 	@kubectl patch svc argocd-server -n $(ARGOCD_NS) --type='json' -p='[{"op": "replace", "path": "/spec/type", "value": "NodePort"}, {"op": "replace", "path": "/spec/ports/0/nodePort", "value": 30081}]'
 
 password:
 	@echo "\nArgo CD Initial Admin Password:"
 	@kubectl -n $(ARGOCD_NS) get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
+	@kubectl -n $(GITLAB_NS) get secret gitlab-gitlab-initial-root-password -o go-template='{{.data.password}}' | base64 -d && echo
 
 logs:
 	@echo "Fetching logs from playground app..."

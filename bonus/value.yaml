@@ -1,20 +1,19 @@
 global:
   hosts:
-    domain: kixlab.com # Replace with your VM IP or domain, e.g., 192.168.1.100
-    https: false # Disable HTTPS for local
+    domain: kixlab.com
+    https: false
   ingress:
     configureCertmanager: false
     tls:
-      secretName: "" # No TLS secret for local
+      secretName: ""
 
 nginx-ingress:
   enabled: true
   controller:
     service:
-      type: NodePort # Patch to NodePort as per tutorial
+      type: NodePort
       externalTrafficPolicy: Cluster
 
-# Storage class for persistence (k3d default is local-path)
 postgresql:
   persistence:
     storageClass: local-path
@@ -34,6 +33,6 @@ gitlab:
     service:
       type: NodePort
   registry:
-    enabled: false # Disable registry for simplicity
+    enabled: false
   prometheus:
-    install: false # Disable Prometheus for local
+    install: false
