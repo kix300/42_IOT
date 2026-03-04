@@ -9,7 +9,7 @@ all: cluster namespaces argocd deploy-gitlab password status
 
 cluster:
 	@echo "Creating k3d cluster..."
-	@k3d cluster create $(CLUSTER_NAME) -p "8888:30080@loadbalancer" -p "8443:30081@loadbalancer" --agents 1 --servers-memory 6G --agents-memory 6G
+	@k3d cluster create $(CLUSTER_NAME) -p "8888:30080@loadbalancer" -p "8443:30081@loadbalancer" -p "80:30080@loadbalancer" -p "443:30081@loadbalancer" --agents 1 --servers-memory 5G --agents-memory 5G
 	@echo "Waiting for nodes to be ready..."
 	@kubectl wait --for=condition=ready node --all --timeout=60s
 
@@ -68,11 +68,7 @@ clean:
 
 
 server:
-	@echo "Setting up port-forward to ArgoCD server..."
-	@echo "Access ArgoCD UI at: https://localhost:$(LOCAL_PORT)"
-	@echo "Use 'make password' to get the admin password"
-	@echo "Keep this terminal open - Press Ctrl+C to stop\n"
-	@kubectl port-forward -n $(ARGOCD_NS) svc/$(ARGOCD_SERVER) $(LOCAL_PORT):443
+	@kubectl port-forward -n gitlab svc/gitlab-nginx-ingress-controller 8080:80
 
 access-guide:
 	@echo "\nArgoCD Access Guide:"
